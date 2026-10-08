@@ -1,3 +1,14 @@
+[app]
+
+# (str) Title of your application
+title = My Application
+
+# (str) Package name
+package.name = myapp
+
+# (str) Package domain (needed for android packaging)
+package.domain = org.test
+
 # (int) Android API to target
 android.api = 31
 
