@@ -27,6 +27,7 @@ jobs:
 
     - name: Build with Buildozer
       run: |
+        export MAKEOPTS="-j2"
         yes | buildozer -v android debug
 
     - name: Upload APK
