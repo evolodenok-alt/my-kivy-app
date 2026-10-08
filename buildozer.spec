@@ -1,26 +1,37 @@
-[app]
+name: Build APK
 
-title = My App
-package.name = myapp
-package.domain = org.example
+on:
+  push:
+  workflow_dispatch:
 
-source.dir = .
-source.include_exts = py,png,jpg,kv,atlas,json,txt
-version = 0.1
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
+    env:
+      JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
+    steps:
+      - uses: actions/checkout@v4
 
-requirements = python3,kivy
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
 
-orientation = portrait
-fullscreen = 0
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git zip unzip openjdk-17-jdk autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev build-essential ccache
+          pip install --upgrade pip
+          pip install buildozer "cython<3" virtualenv
 
-android.permissions = INTERNET
-android.api = 33
-android.minapi = 21
-android.archs = arm64-v8a, armeabi-v7a
-android.accept_sdk_license = True
-android.allow_backup = True
+      - name: Build APK
+        run: |
+          export PATH=$JAVA_HOME/bin:$PATH
+          java -version
+          buildozer -v android debug
 
-[buildozer]
-
-log_level = 2
-warn_on_root = 1
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: bin/*.apk
