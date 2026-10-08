@@ -10,39 +10,54 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
 
-    - name: Restore Buildozer cache
-      uses: actions/cache@v4
-      with:
-        path: |
-          .buildozer
-          bin/
-        key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}
-        restore-keys: |
-          ${{ runner.os }}-buildozer-
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            git \
+            zip \
+            unzip \
+            autoconf \
+            libtool \
+            pkg-config \
+            zlib1g-dev \
+            libncurses5-dev \
+            libncursesw5-dev \
+            libtinfo5 \
+            libffi-dev \
+            libssl-dev
+          pip install --upgrade pip
+          # Устанавливаем Cython 3.x, который требуется для современного Kivy
+          pip install "cython<3.0.0" buildozer
 
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y git zip unzip openjdk-17-jdk autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libstdc++6 patchelf
-        pip install --upgrade pip
-        pip install cython==0.29.36 buildozer
+      - name: Cache Buildozer directory
+        uses: actions/cache@v4
+        with:
+          path: |
+            .buildozer
+            ~/.buildozer
+          key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}-${{ hashFiles('**.py') }}
+          restore-keys: |
+            ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}-
+            ${{ runner.os }}-buildozer-
 
-    - name: Build with Buildozer
-      run: |
-        export MAKEOPTS="-j2"
-        yes | buildozer -v android debug
+      - name: Build with Buildozer
+        env:
+          MAKEOPTS: "-j2"
+        run: |
+          buildozer -v android debug
 
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: python-kivy-apk
-        path: bin/*.apk
-        
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-kivy-apk
+          path: bin/*.apk
+          
