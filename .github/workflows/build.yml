@@ -1,63 +1,27 @@
-name: Build Android APK
+  - uses: actions/setup-python@v5
+    with:
+      python-version: "3.10"
 
-on:
-  push:
-    branches: [ main, master ]
-  workflow_dispatch:
+  - name: Install dependencies
+    run: |
+      sudo apt-get update
+      sudo apt-get install -y git zip unzip openjdk-17-jdk autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev build-essential ccache
+      pip install --upgrade pip
+      pip install buildozer "cython<3" virtualenv
 
-jobs:
-  build:
-    runs-on: ubuntu-22.04
+  - name: Accept Android licenses
+    run: |
+      SDK=~/.buildozer/android/platform/android-sdk
+      mkdir -p $SDK/licenses
+      echo -e "\n24333f8a63b6825ea9c5514f83c2829b004d1fee" > $SDK/licenses/android-sdk-license
+      echo -e "\nd56f5187479451eabf01fb78af6dfcb131a6481e" >> $SDK/licenses/android-sdk-license
+      echo -e "\n84831b9409646a918e30573bab4c9c91346d8abd" > $SDK/licenses/android-sdk-preview-license
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  - name: Build APK
+    run: yes | buildozer -v android debug
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            git \
-            zip \
-            unzip \
-            autoconf \
-            libtool \
-            pkg-config \
-            zlib1g-dev \
-            libncurses5-dev \
-            libncursesw5-dev \
-            libtinfo5 \
-            libffi-dev \
-            libssl-dev
-          pip install --upgrade pip
-          # Устанавливаем Cython 3.x, который требуется для современного Kivy
-          pip install "cython<3.0.0" buildozer
-
-      - name: Cache Buildozer directory
-        uses: actions/cache@v4
-        with:
-          path: |
-            .buildozer
-            ~/.buildozer
-          key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}-${{ hashFiles('**.py') }}
-          restore-keys: |
-            ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}-
-            ${{ runner.os }}-buildozer-
-
-      - name: Build with Buildozer
-        env:
-          MAKEOPTS: "-j2"
-        run: |
-          buildozer -v android debug
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: python-kivy-apk
-          path: bin/*.apk
-          
+  - name: Upload APK
+    uses: actions/upload-artifact@v4
+    with:
+      name: app-debug-apk
+      path: bin/*.apk
