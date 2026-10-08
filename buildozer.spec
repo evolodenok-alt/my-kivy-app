@@ -1,11 +1,14 @@
-[app]
-title = My Kivy Game
-package.name = mykivygame
-package.domain = org.test
-source.dir = .
-source.include_exts = py,png,jpg,kv,atlas
-version = 0.1
-requirements = python3,kivy
-orientation = portrait
-fullscreen = 0
-android.archs = arm64-v8a
+# (int) Android API to target
+android.api = 31
+
+# (int) Minimum API your APK will support
+android.minapi = 21
+
+# (str) Android SDK version to use
+android.sdk = 31
+
+# (str) Android NDK version to use
+android.ndk = 25b
+
+# (str) Android build tools version to use
+android.build_tools_version = 33.0.0
